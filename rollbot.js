@@ -85,8 +85,12 @@ class Roll {
         this.client.createMessage(msg.channel.id, `💸 <@${userID}> cashed out **@${buster.bust}×** (💵 **${this.largeNumber(buster.amountWon)}**)`);
       }
     })
+
+    this.client.on("error", (e) => {
+      console.error(e);
+    })
+
     this.log.info(`connecting to discord..`);
-    this.log.info(this.config.token);
     this.client.connect();
   }
 
