@@ -1,9 +1,3 @@
-const fs = require('fs');
-
-require.extensions['.txt'] = function (module, filename) {
-    module.exports = fs.readFileSync(filename, 'utf8');
-};
-
 const Eris = require("eris");
 const DBManager = require("./DBManager");
 const Logger = require("./Logger");
@@ -11,7 +5,7 @@ const Logger = require("./Logger");
 class Roll {
   constructor() {
     this.config = {
-      token: require("./token.txt"),
+      token: require("./token"),
       db: {
         name: "roll"
       },
