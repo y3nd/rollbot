@@ -17,7 +17,7 @@ class Roll {
       },
       minBet: 5,
       timeout: 1*60*1000,
-      bustTimeout: 5*1000,
+      bustTimeout: 4*1000,
       dailyStreakBonus: 150,
       dailyBonusMin: 200,
       dailyBonusMax: 500,
@@ -27,9 +27,9 @@ class Roll {
     this.client = new Eris(this.config.token);
     this.dbManager = new DBManager(this);
 
-    /*for(var i = 0; i<100; i++) {
+    for(var i = 0; i<500; i++) {
       console.log(this.getBustParams());
-    }*/
+    }
   }
 
   async start() {
@@ -292,11 +292,6 @@ class Roll {
           winner = roll;
         }
 
-        if(roll.userID == "409383831758700554") {
-          lucky = Math.floor(Math.random() * roll.amount)+accumulator;
-          winner = roll;
-        }
-
         accumulator += roll.amount;
       })
 
@@ -365,12 +360,13 @@ class Roll {
   }
 
   getBustParams() {
-    var ms = ((Math.round(Math.pow(Math.random(), 2)*30*1000*0.5))+1000);
+    var ms = ((Math.round(Math.pow(Math.random(), 2.8)*30*1000*1.6))+100);
     return { ms: ms, bust: this.getBustFromMS(ms) };
   }
 
   getBustFromMS(ms) {
-    return Math.round(Math.pow(ms/1000, 1.1)*100)/100+1;
+    //if(ms < 1000) ms = 1000;
+    return (Math.floor(Math.pow(ms/10000, 4)*100)+100)/100;
   }
 
   async handleTop(msg) {
