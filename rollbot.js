@@ -360,13 +360,13 @@ class Roll {
   }
 
   getBustParams() {
-    var ms = ((Math.round(Math.pow(Math.random(), 1.6)*30*1000*1.1))+100);
+    var ms = ((Math.round(Math.pow(Math.random(), 3.3)*40*1000))+100);
     return { ms: ms, bust: this.getBustFromMS(ms) };
   }
 
   getBustFromMS(ms) {
     //if(ms < 1000) ms = 1000;
-    return (Math.floor(Math.pow(ms/10000, 4)*100)+100)/100;
+    return (Math.floor(Math.pow(ms/1000, 1.06)*100)+100)/100;
   }
 
   async handleTop(msg) {
