@@ -360,7 +360,7 @@ class Roll {
   }
 
   getBustParams() {
-    var ms = ((Math.round(Math.pow(Math.random(), 2.8)*30*1000*1.6))+100);
+    var ms = ((Math.round(Math.pow(Math.random(), 1.6)*30*1000*1.1))+100);
     return { ms: ms, bust: this.getBustFromMS(ms) };
   }
 
