@@ -184,7 +184,7 @@ class Roll {
     this.updateUser(msg.author.id, set);
 
     var text = `💸 You've been awarded 💵 **${amount}**`;
-    if(set.dailyStreak > 1) text += `\n\nOngoing streak: **${set.dailyStreak}**x${this.dailyStreakBonus} = **${set.dailyStreak*this.dailyStreakBonus}** streak bonus`;
+    if(set.dailyStreak > 1) text += `\n\nOngoing streak: **${set.dailyStreak}**x${this.config.dailyStreakBonus} = **${set.dailyStreak*this.config.dailyStreakBonus}** streak bonus`;
 
     this.client.createMessage(msg.channel.id, text);
   }
