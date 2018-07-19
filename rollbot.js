@@ -90,6 +90,11 @@ class Roll {
       console.error(e);
     })
 
+    // DEBUG
+    this.client.on("rawWS", (e) => {
+      console.log(e);
+    })
+
     this.log.info(`connecting to discord..`);
     this.client.connect();
   }
