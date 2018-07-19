@@ -370,7 +370,7 @@ class Roll {
   }
 
   getBustFromMS(ms) {
-    return Math.round(Math.pow(ms/1000, 1.1)*100)/100;
+    return Math.round(Math.pow(ms/1000, 1.1)*100)/100+1;
   }
 
   async handleTop(msg) {
