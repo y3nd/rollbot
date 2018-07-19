@@ -86,6 +86,7 @@ class Roll {
       }
     })
     this.log.info(`connecting to discord..`);
+    thid.log.info(this.config.token);
     this.client.connect();
   }
 
