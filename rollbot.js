@@ -83,7 +83,7 @@ class Roll {
         //console.log(bust.notCashedOutCount);
         if(bust.notCashedOutCount == 0) {
           clearTimeout(bust.timeout);
-          this.client.createMessage(msg.channel.id, "💸 *Auto-busting since all players have cashed out*");
+          this.client.createMessage(msg.channel.id, "💸 *Auto since all players have cashed out*");
           this.bust(msg.channel);
         }
       }
@@ -132,10 +132,11 @@ class Roll {
 
       setTimeout(async () => {
         var m = await this.client.createMessage(msg.channel.id, this.getBustStartMessage(bust));
-        await m.addReaction(`🛑`);
+        m.addReaction(`🛑`);
         bust.startDate = new Date();
         bust.status = 1;
         bust.startMessage = m;
+        await m.addReaction(`🛑`);
       }, this.config.bustTimeout);
       bust.timeout = setTimeout(() => {
         this.bust(msg.channel);
@@ -158,8 +159,10 @@ class Roll {
   }
 
   getBustStartMessage(bust, end) {
-    return `💸 ⚪ **Bust started ⚪
-    \n\n###   @${end ? bust.params.bust.toFixed(2) : this.getResultFromMS(new Date() - bust.startDate).toFixed(2)}×   ###**`;
+    return `💸 ⚪ **Bust started** ⚪
+    \n\n###
+    \n\n*##*     @**${end ? bust.params.bust.toFixed(2) : this.getResultFromMS(new Date() - bust.startDate).toFixed(2)}×**     *##*
+    \n\n###`;
   }
 
   async bust(channel) {
@@ -188,7 +191,7 @@ class Roll {
         text += `@**${buster.bust.toFixed(2)}×** (💵 **${this.largeNumber(buster.amountWon)}**)`;
       }
     }
-    text += `\n*Game seed: *\`${bust.params.seed}\``;
+    text += `\n*Game seed:* \`${bust.params.seed}\``;
     this.client.createMessage(channel.id, text);
 
     channel.guild.bust = { busters: [], status: 0, total: 0 };
