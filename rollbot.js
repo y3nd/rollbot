@@ -83,7 +83,7 @@ class Roll {
         //console.log(bust.notCashedOutCount);
         if(bust.notCashedOutCount == 0) {
           clearTimeout(bust.timeout);
-          this.client.createMessage(msg.channel.id, "💸 *Auto since all players have cashed out*");
+          this.client.createMessage(msg.channel.id, "💸 *Auto-bust since all players have cashed out*");
           this.bust(msg.channel);
         }
       }
