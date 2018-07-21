@@ -166,7 +166,7 @@ class Roll {
     var text = `💸 🛑 **Busted @${bust.params.bust.toFixed(2)}×** 🛑\n`;
     bust.busters.sort((a, b) => a.bust - b.bust);
     bust.busters.forEach((buster) => {
-      text += `\n<@${buster.userID}> - ${buster.cashedOut ? `@**${buster.bust.toFixed(2)}×** (💵 **${this.largeNumber(buster.amountWon)}**)` : `*💵 -${this.largeNumber(buster.amount)} - LOST*`}`;
+      text += `\n<@${buster.userID}> - ${buster.cashedOut ? `@**${buster.bust.toFixed(2)}×** (💵 **${this.largeNumber(buster.amountWon)}**)` : `*💵 **-${this.largeNumber(buster.amount)}** - LOST*`}`;
     })
     this.client.createMessage(channel.id, text);
 
