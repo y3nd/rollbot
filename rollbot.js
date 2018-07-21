@@ -2,6 +2,8 @@ const Eris = require("eris");
 const DBManager = require("./DBManager");
 const Logger = require("./Logger");
 
+const crypto = require("crypto")
+
 class Roll {
   constructor() {
     this.config = {
@@ -126,7 +128,7 @@ class Roll {
         bust.status = 1;
         bust.startMessage = m;
       }, this.config.bustTimeout);
-      setTimeout(() => {
+      bust.timeout = setTimeout(() => {
         this.bust(msg.channel);
       }, this.config.bustTimeout+bust.params.ms);
     }
@@ -360,13 +362,22 @@ class Roll {
   }
 
   getBustParams() {
-    var ms = ((Math.round(Math.pow(Math.random(), 3.3)*40*1000))+100);
-    return { ms: ms, bust: this.getBustFromMS(ms) };
+    const hash = crypto.createHash("sha256");
+    var d = new Date();
+    hash.update(d.toString()+Math.floor(Math.random()*1000));
+    var seed = hash.digest("base64");
+    var result = this.gameResult(seed, "llortob");
+    return { ms: this.getMSFromResult(result), bust: result };
   }
 
-  getBustFromMS(ms) {
+  getMSFromResult(result) {
     //if(ms < 1000) ms = 1000;
-    return (Math.floor(Math.pow(ms/1000, 1.06)*100)+100)/100;
+    return Math.floor(Math.pow(result-1, 0.35)*5000);
+  }
+
+  getResultFromMS(ms) {
+    //if(ms < 1000) ms = 1000;
+    return Math.floor((Math.pow(ms/5000, 1/0.35)+1)*100)/100;
   }
 
   async handleTop(msg) {
@@ -398,6 +409,29 @@ class Roll {
     // format number and add suffix
     return scaled.toFixed(1) + suffix;
   }
+
+  gameResult(seed, salt) {
+    const nBits = 52 // number of most significant bits to use
+
+    // 1. HMAC_SHA256(key=salt, message=seed)
+    const hmac = crypto.createHmac("sha256", salt)
+    hmac.update(seed)
+    seed = hmac.digest("hex")
+
+    // 2. r = 52 most significant bits
+    seed = seed.slice(0, nBits/4)
+    const r = parseInt(seed, 16)
+
+    // 3. X = r / 2^52
+    let X = r / Math.pow(2, nBits) // uniformly distributed in [0; 1)
+
+      // 4. X = 99 / (1-X)
+      X = 99 / (1 - X)
+
+      // 5. return max(trunc(X), 100)
+      const result = Math.floor(X)
+      return Math.max(1, result / 100)
+    }
 }
 
 var rl = new Roll();
