@@ -71,6 +71,7 @@ class Roll {
 
     this.client.on("messageReactionAdd", (msg, emoji, userID) => {
       var bust = this.getBust(msg.channel.guild);
+
       if(bust.status && msg.id == bust.startMessage.id && emoji.name == "🛑") {
         var buster = bust.busters.find(b => b.userID == userID);
         if(!buster) return;
@@ -168,7 +169,7 @@ class Roll {
     var bust = channel.guild.bust;
     bust.status = 0;
     clearInterval(bust.interval);
-    bust.startMessage.edit(this.getBustStartMessage(bust, 1));
+    if(bust.startMessage) bust.startMessage.edit(this.getBustStartMessage(bust, 1));
     var text = `💸 🛑 **Busted @${bust.params.bust.toFixed(2)}×** 🛑\n`;
     bust.busters.sort((a, b) => a.bust - b.bust);
     for (const buster of bust.busters) {
