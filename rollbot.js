@@ -23,15 +23,15 @@ class Roll {
       dailyStreakBonus: 150,
       dailyBonusMin: 200,
       dailyBonusMax: 500,
-      baseBalance: 2500
+      baseBalance: 5000
     }
     this.log = new Logger(this.config);
     this.client = new Eris(this.config.token);
     this.dbManager = new DBManager(this);
 
-    for(var i = 0; i<500; i++) {
+    /*for(var i = 0; i<500; i++) {
       console.log(this.getBustParams());
-    }
+    }*/
   }
 
   async start() {
@@ -75,10 +75,18 @@ class Roll {
         var buster = bust.busters.find(b => b.userID == userID);
         if(!buster) return;
         buster.cashedOut = 1;
-        buster.bust = this.getBustFromMS(new Date() - bust.startDate);
+        buster.bust = this.getResultFromMS(new Date() - bust.startDate);
         buster.amountWon = Math.round(buster.amount*buster.bust);
         this.updateUserBalance(buster.userID, buster.amountWon);
         this.client.createMessage(msg.channel.id, `💸 <@${userID}> cashed out **@${buster.bust}×** (💵 **${this.largeNumber(buster.amountWon)}**)`);
+
+        bust.notCashedOutCount--;
+        //console.log(bust.notCashedOutCount);
+        if(bust.notCashedOutCount == 0) {
+          clearTimeout(bust.timeout);
+          this.client.createMessage(msg.channel.id, "💸 *Auto-busting since all players have cashed out*");
+          this.bust(msg.channel);
+        }
       }
     })
 
@@ -117,6 +125,8 @@ class Roll {
     this.client.createMessage(msg.channel.id, `💸 <@${msg.author.id}> - 💵 **${this.largeNumber(amount)}** in bust`);
 
     if(bust.busters.length == 0) {
+      bust.notCashedOutCount = 0;
+
       this.client.createMessage(msg.channel.id, `💸 starting bust in **${this.config.bustTimeout/1000}** sec`);
 
       bust.params = this.getBustParams();
@@ -133,6 +143,7 @@ class Roll {
       }, this.config.bustTimeout+bust.params.ms);
     }
 
+    bust.notCashedOutCount++;
     bust.busters.push({
       userID: msg.author.id,
       amount: amount,
@@ -146,7 +157,7 @@ class Roll {
     var text = `💸 🛑 **Busted @${bust.params.bust}×** 🛑\n`;
     bust.busters.sort((a, b) => a.bust - b.bust);
     bust.busters.forEach((buster) => {
-      text += `\n<@${buster.userID}> - ${buster.cashedOut ? `@**${buster.bust}**× (💵 ${this.largeNumber(buster.amountWon)})` : `💵 **-${this.largeNumber(buster.amount)}** - *LOST*`}`;
+      text += `\n<@${buster.userID}> - ${buster.cashedOut ? `@**${buster.bust}×** (💵 **${this.largeNumber(buster.amountWon)}**)` : `*💵 -${this.largeNumber(buster.amount)} - LOST*`}`;
     })
     this.client.createMessage(channel.id, text);
 
