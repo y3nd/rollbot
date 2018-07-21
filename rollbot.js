@@ -160,7 +160,6 @@ class Roll {
 
   getBustStartMessage(bust, end) {
     return `💸 ⚪ **Bust started** ⚪
-    \n\n###
     \n\n*##*     @**${end ? bust.params.bust.toFixed(2) : this.getResultFromMS(new Date() - bust.startDate).toFixed(2)}×**     *##*
     \n\n###`;
   }
@@ -191,7 +190,7 @@ class Roll {
         text += `@**${buster.bust.toFixed(2)}×** (💵 **${this.largeNumber(buster.amountWon)}**)`;
       }
     }
-    text += `\n*Game seed:* \`${bust.params.seed}\``;
+    text += `\n\n*Game seed:* \`${bust.params.seed}\``;
     this.client.createMessage(channel.id, text);
 
     channel.guild.bust = { busters: [], status: 0, total: 0 };
