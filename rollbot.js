@@ -132,11 +132,15 @@ class Roll {
       bust.params = this.getBustParams();
 
       setTimeout(async () => {
-        var m = await this.client.createMessage(msg.channel.id, `💸 ⚪ **Bust started** ⚪`);
+        var m = await this.client.createMessage(msg.channel.id, this.getBustStartMessage(bust));
         m.addReaction(`🛑`);
         bust.startDate = new Date();
         bust.status = 1;
         bust.startMessage = m;
+
+        bust.interval = setInterval(() => {
+          m.edit(this.getBustStartMessage(bust));
+        }, 250);
       }, this.config.bustTimeout);
       bust.timeout = setTimeout(() => {
         this.bust(msg.channel);
@@ -151,9 +155,14 @@ class Roll {
     });
   }
 
+  getBustStartMessage(bust) {
+    return `💸 ⚪ **Bust started @${this.getResultFromMS(new Date() - bust.startDate)}×** ⚪`;
+  }
+
   bust(channel) {
     var bust = channel.guild.bust;
     bust.status = 0;
+    clearInterval(bust.interval);
     var text = `💸 🛑 **Busted @${bust.params.bust}×** 🛑\n`;
     bust.busters.sort((a, b) => a.bust - b.bust);
     bust.busters.forEach((buster) => {
