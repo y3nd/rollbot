@@ -78,7 +78,7 @@ class Roll {
         buster.bust = this.getResultFromMS(new Date() - bust.startDate);
         buster.amountWon = Math.round(buster.amount*buster.bust);
         this.updateUserBalance(buster.userID, buster.amountWon);
-        this.client.createMessage(msg.channel.id, `💸 <@${userID}> cashed out **@${buster.bust}×** (💵 **${this.largeNumber(buster.amountWon)}**)`);
+        this.client.createMessage(msg.channel.id, `💸 <@${userID}> cashed out **@${buster.bust.toFixed(2)}×** (💵 **${this.largeNumber(buster.amountWon)}**)`);
 
         bust.notCashedOutCount--;
         //console.log(bust.notCashedOutCount);
@@ -140,7 +140,7 @@ class Roll {
 
         bust.interval = setInterval(() => {
           m.edit(this.getBustStartMessage(bust));
-        }, 250);
+        }, 1000);
       }, this.config.bustTimeout);
       bust.timeout = setTimeout(() => {
         this.bust(msg.channel);
@@ -156,17 +156,17 @@ class Roll {
   }
 
   getBustStartMessage(bust) {
-    return `💸 ⚪ **Bust started @${this.getResultFromMS(new Date() - bust.startDate)}×** ⚪`;
+    return `💸 ⚪ **Bust started @${this.getResultFromMS(new Date() - bust.startDate).toFixed(2)}×** ⚪`;
   }
 
   bust(channel) {
     var bust = channel.guild.bust;
     bust.status = 0;
     clearInterval(bust.interval);
-    var text = `💸 🛑 **Busted @${bust.params.bust}×** 🛑\n`;
+    var text = `💸 🛑 **Busted @${bust.params.bust.toFixed(2)}×** 🛑\n`;
     bust.busters.sort((a, b) => a.bust - b.bust);
     bust.busters.forEach((buster) => {
-      text += `\n<@${buster.userID}> - ${buster.cashedOut ? `@**${buster.bust}×** (💵 **${this.largeNumber(buster.amountWon)}**)` : `*💵 -${this.largeNumber(buster.amount)} - LOST*`}`;
+      text += `\n<@${buster.userID}> - ${buster.cashedOut ? `@**${buster.bust.toFixed(2)}×** (💵 **${this.largeNumber(buster.amountWon)}**)` : `*💵 -${this.largeNumber(buster.amount)} - LOST*`}`;
     })
     this.client.createMessage(channel.id, text);
 
@@ -397,7 +397,7 @@ class Roll {
 
   getResultFromMS(ms) {
     //if(ms < 1000) ms = 1000;
-    return Math.floor((Math.pow(ms/5000, 1/0.35)+1)*100)/100;
+    return Math.floor((Math.pow(ms/5000, 1/0.35)+1)*100)/100 || 1;
   }
 
   async handleTop(msg) {
