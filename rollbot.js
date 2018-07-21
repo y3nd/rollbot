@@ -54,8 +54,8 @@ class Roll {
         //bot.createMessage(msg.channel.id, "Pong!");
       } else if(bustMatch) {
         this.handleBust(msg, bustMatch);
-      } else if(msg.content.startsWith("r!c")) {
-        this.handleCredits(msg);
+      } else if(msg.content.startsWith("r!p")) {
+        this.handleProfile(msg);
         //bot.createMessage(msg.channel.id, "Ping!");
       } else if(msg.content.startsWith("r!daily")) {
         this.handleDaily(msg);
@@ -77,7 +77,6 @@ class Roll {
         buster.cashedOut = 1;
         buster.bust = this.getResultFromMS(new Date() - bust.startDate);
         buster.amountWon = Math.round(buster.amount*buster.bust);
-        this.updateUserBalance(buster.userID, buster.amountWon);
         this.client.createMessage(msg.channel.id, `💸 <@${userID}> cashed out **@${buster.bust.toFixed(2)}×** (💵 **${this.largeNumber(buster.amountWon)}**)`);
 
         bust.notCashedOutCount--;
@@ -120,7 +119,7 @@ class Roll {
       return;
     }
 
-    this.updateUserBalance(user.id, -1*amount);
+    this.updateUserInc(msg.author.id, { gamesPlayed: 1 });
 
     this.client.createMessage(msg.channel.id, `💸 <@${msg.author.id}> - 💵 **${this.largeNumber(amount)}** in bust`);
 
@@ -133,18 +132,21 @@ class Roll {
 
       setTimeout(async () => {
         var m = await this.client.createMessage(msg.channel.id, this.getBustStartMessage(bust));
-        m.addReaction(`🛑`);
+        await m.addReaction(`🛑`);
         bust.startDate = new Date();
         bust.status = 1;
         bust.startMessage = m;
-
-        bust.interval = setInterval(() => {
-          m.edit(this.getBustStartMessage(bust));
-        }, 1000);
       }, this.config.bustTimeout);
       bust.timeout = setTimeout(() => {
         this.bust(msg.channel);
       }, this.config.bustTimeout+bust.params.ms);
+
+      bust.interval = setInterval(() => {
+        var text = this.getBustStartMessage(bust);
+        if(bust.status == 1 && bust.startMessage && bust.startMessage.content !== text) {
+          bust.startMessage.edit(text);
+        }
+      }, 1005);
     }
 
     bust.notCashedOutCount++;
@@ -155,19 +157,38 @@ class Roll {
     });
   }
 
-  getBustStartMessage(bust) {
-    return `💸 ⚪ **Bust started @${this.getResultFromMS(new Date() - bust.startDate).toFixed(2)}×** ⚪`;
+  getBustStartMessage(bust, end) {
+    return `💸 ⚪ **Bust started ⚪
+    \n\n###   @${end ? bust.params.bust.toFixed(2) : this.getResultFromMS(new Date() - bust.startDate).toFixed(2)}×   ###**`;
   }
 
-  bust(channel) {
+  async bust(channel) {
     var bust = channel.guild.bust;
     bust.status = 0;
     clearInterval(bust.interval);
+    bust.startMessage.edit(this.getBustStartMessage(bust, 1));
     var text = `💸 🛑 **Busted @${bust.params.bust.toFixed(2)}×** 🛑\n`;
     bust.busters.sort((a, b) => a.bust - b.bust);
-    bust.busters.forEach((buster) => {
-      text += `\n<@${buster.userID}> - ${buster.cashedOut ? `@**${buster.bust.toFixed(2)}×** (💵 **${this.largeNumber(buster.amountWon)}**)` : `*💵 **-${this.largeNumber(buster.amount)}** - LOST*`}`;
-    })
+    for (const buster of bust.busters) {
+      text += `\n<@${buster.userID}> - `;
+
+      if(!buster.cashedOut) {
+        await this.updateUserInc(buster.userID, {
+          gamesLost: 1,
+          losses: buster.amount,
+          balance: -buster.amount
+        });
+        text += `*💵 **-${this.largeNumber(buster.amount)}** - LOST*`;
+      } else {
+        await this.updateUserInc(buster.userID, {
+          gamesWon: 1,
+          earnings: buster.amountWon,
+          balance: buster.amountWon
+        });
+        text += `@**${buster.bust.toFixed(2)}×** (💵 **${this.largeNumber(buster.amountWon)}**)`;
+      }
+    }
+    text += `\n*Game seed: *\`${bust.params.seed}\``;
     this.client.createMessage(channel.id, text);
 
     channel.guild.bust = { busters: [], status: 0, total: 0 };
@@ -339,7 +360,10 @@ class Roll {
         discordCreatedAt: author.createdAt,
         createdAt: new Date(),
         avatar: author.avatar,
-        balance: this.config.baseBalance
+        balance: this.config.baseBalance,
+        losses: 0,
+        earnings: 0,
+        gamesPlayed: 0
       }
       await this.db.collection("users").insert(user);
     }
@@ -354,15 +378,34 @@ class Roll {
     await this.db.collection("users").update({ id: id }, { $inc: { balance: variation }});
   }
 
+  async updateUserInc(id, set) {
+    await this.db.collection("users").update({ id: id }, { $inc: set });
+  }
+
   formatChance(amount, total) {
     return `${Math.round((amount/total)*10000)/100}%`;
   }
 
-  async handleCredits(msg) {
+  async handleProfile(msg) {
     var user = await this.getUser(msg.author);
-    var credits = user.balance;
-    var text = `💸 <@${msg.author.id}> Current balance 💵 **${this.largeNumber(credits)}**`;
-    this.client.createMessage(msg.channel.id, text);
+    var profit = user.earnings-user.losses;
+    var embed = {
+      title: `💸 **${msg.author.username}** profile 💸`,
+      timestamp: new Date(),
+      footer: { text: "Rollbot" },
+      fields: [
+        { name: "Balance", value: `💵 **${this.largeNumber(user.balance)}**`, inline: true },
+        { name: "Games played", value: `🕹️ **${this.largeNumber(user.gamesPlayed)}**`, inline: true },
+        { name: "Profit",
+          value: `${profit>0?`✅`:`🔴`} **${this.largeNumber(profit)}**`,
+          inline: true
+        },
+        { name: "Earnings", value: `🔺 **${this.largeNumber(user.earnings)}**`, inline: true },
+        { name: "Losses", value: `🔻 **${this.largeNumber(user.losses)}**`, inline: true },
+        { name: "-", value: `-`, inline: true }
+      ]
+    }
+    this.client.createMessage(msg.channel.id, { embed });
   }
 
   getBankRoll(guild) {
@@ -387,7 +430,7 @@ class Roll {
     hash.update(d.toString()+Math.floor(Math.random()*1000));
     var seed = hash.digest("base64");
     var result = this.gameResult(seed, "llortob");
-    return { ms: this.getMSFromResult(result), bust: result };
+    return { ms: this.getMSFromResult(result), bust: result, seed: seed };
   }
 
   getMSFromResult(result) {
