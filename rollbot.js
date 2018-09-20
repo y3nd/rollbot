@@ -20,9 +20,9 @@ class Roll {
       minBet: 5,
       timeout: 1*60*1000,
       bustTimeout: 4*1000,
-      dailyStreakBonus: 150,
-      dailyBonusMin: 200,
-      dailyBonusMax: 500,
+      dailyStreakBonus: 100,
+      dailyBonusMin: 100,
+      dailyBonusMax: 1200,
       baseBalance: 5000
     }
     this.log = new Logger(this.config);
@@ -211,21 +211,24 @@ class Roll {
 
     if(!user.dailyStreak) user.dailyStreak = 1;
 
-    var amount = Math.floor((Math.random()*this.config.dailyBonusMax) + this.config.dailyBonusMin + this.config.dailyStreakBonus*user.dailyStreak);
+    var set = {
+      lastDaily: new Date(),
+      //balance: user.balance+amount
+    };
 
     var d2 = new Date();
     d2.setHours(0, 0, 0, 0);
 
-    var set = {
-      lastDaily: new Date(),
-      balance: user.balance+amount
-    };
-
     if(user.dailyStreak && d2 - user.lastDaily < day) {
       set.dailyStreak = user.dailyStreak+1;
+      if(set.dailyStreak > 10) set.dailyStreak = 10;
     } else {
       set.dailyStreak = 1;
     }
+
+    var amount = Math.floor((Math.random()*this.config.dailyBonusMax) + this.config.dailyBonusMin + this.config.dailyStreakBonus*set.dailyStreak);
+
+    set.balance = user.balance+amount;
 
     this.updateUser(msg.author.id, set);
 
