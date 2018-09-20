@@ -133,15 +133,15 @@ class Roll {
 
       setTimeout(async () => {
         var m = await this.client.createMessage(msg.channel.id, this.getBustStartMessage(bust));
-        m.addReaction(`🛑`);
+        //m.addReaction(`🛑`);
         bust.startDate = new Date();
         bust.status = 1;
         bust.startMessage = m;
         await m.addReaction(`🛑`);
+        bust.timeout = setTimeout(() => {
+          this.bust(msg.channel);
+        }, bust.params.ms);
       }, this.config.bustTimeout);
-      bust.timeout = setTimeout(() => {
-        this.bust(msg.channel);
-      }, this.config.bustTimeout+bust.params.ms);
 
       bust.interval = setInterval(() => {
         var text = this.getBustStartMessage(bust);
